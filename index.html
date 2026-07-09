@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title id="J_desktopTitle">App</title>
+  <meta http-equiv="cache-control" content="no-cache" />
+  <meta name="apple-touch-fullscreen" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="App" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
+  <link id="J_desktopIcon" rel="apple-touch-icon" sizes="180x180" href="" />
+  <style>
+    :root {
+      --bg: #f5f6f8;
+      --text: #111;
+      --muted: #999;
+      --primary: #1677ff;
+      --card: #fff;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      height: 100%;
+      width: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .hidden { display: none !important; }
+    .enter-view {
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 20px 48px;
+      text-align: center;
+    }
+    .enter-view .tips { font-size: 14px; color: var(--muted); margin-bottom: 28px; }
+    .enter-view .icon {
+      width: 72px; height: 72px; border-radius: 16px; object-fit: cover;
+      margin-bottom: 16px; background: #e8e8e8;
+    }
+    .enter-view .appname { font-size: 18px; font-weight: 600; margin-bottom: 48px; }
+    .enter-view .btn {
+      appearance: none; border: 0; width: min(343px, 100%); height: 44px;
+      border-radius: 8px; background: var(--primary); color: #fff;
+      font-size: 17px; font-weight: 600;
+    }
+    .guide-view { min-height: 100%; padding: 28px 20px 40px; text-align: center; }
+    .guide-view .subject { font-size: 20px; font-weight: 600; margin-bottom: 28px; }
+    .preview { position: relative; width: 250px; margin: 0 auto 32px; }
+    .preview .phone {
+      width: 100%; display: block; border-radius: 28px;
+      background: linear-gradient(160deg, #2c2c2e, #1c1c1e);
+      aspect-ratio: 9 / 16; position: relative; overflow: hidden;
+      box-shadow: 0 12px 40px rgba(0,0,0,.18);
+    }
+    .preview .phone-inner {
+      position: absolute; inset: 12% 10% 18%; background: #f2f2f7;
+      border-radius: 8px; display: flex; flex-direction: column;
+      align-items: center; padding-top: 28%;
+    }
+    .preview .desk-icon {
+      width: 56px; height: 56px; border-radius: 12px; object-fit: cover; background: #ddd;
+    }
+    .preview .desk-title {
+      margin-top: 8px; font-size: 11px; color: #333; max-width: 72px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .steps {
+      text-align: left; max-width: 360px; margin: 0 auto; background: var(--card);
+      border-radius: 12px; padding: 18px 16px; box-shadow: 0 6px 20px rgba(0,0,0,.06);
+    }
+    .steps .row { font-size: 15px; line-height: 1.5; color: #333; margin-bottom: 14px; }
+    .steps .row:last-child { margin-bottom: 0; }
+    .steps label { color: var(--primary); font-weight: 600; }
+    .steps .share {
+      display: inline-block; width: 18px; height: 18px; vertical-align: -3px; margin: 0 2px;
+    }
+    .mono {
+      margin-top: 20px; font-family: ui-monospace, Menlo, monospace; font-size: 11px;
+      color: #8a8a8a; word-break: break-all; padding: 0 8px;
+    }
+    .note { margin-top: 16px; font-size: 12px; color: var(--muted); line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <div id="enterView" class="enter-view hidden">
+    <div class="tips">你即将进入</div>
+    <img id="enterIcon" class="icon" alt="" />
+    <div id="enterName" class="appname">App</div>
+    <button type="button" class="btn" id="enterBtn">立即进入</button>
+  </div>
+
+  <div id="guideView" class="guide-view hidden">
+    <div class="subject">添加服务到桌面</div>
+    <div class="preview">
+      <div class="phone">
+        <div class="phone-inner">
+          <img id="guideIcon" class="desk-icon" alt="" />
+          <div id="guideName" class="desk-title">App</div>
+        </div>
+      </div>
+    </div>
+    <div class="steps" id="stepsBox"></div>
+    <p class="note">请用 iPhone Safari 打开本页（不要用微信内置浏览器），再按步骤添加到主屏幕。</p>
+    <p class="mono" id="schemePreview"></p>
+  </div>
+
+  <script>
+(function () {
+  "use strict";
+
+  // ========== 改这里即可 ==========
+  var DEFAULT_ICON = "data:image/png;base64,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";
+  var WEBCLIP_CONFIG = {
+    appName: "TNG Wallet",
+    appIcon: DEFAULT_ICON,
+    schemeHost: "tngdwallet",
+    path: "client/dl/nearme/home",
+    // 也可直接写完整 deeplink（优先于 schemeHost + path）:
+    // scheme: "tngdwallet://client/dl/nearme/home",
+    autoJumpDelayMs: 300,
+    fallbackUrl: "",
+    fallbackDelayMs: 2000,
+  };
+  // ==============================
+
+  function getQuery(url) {
+    var query = {};
+    var urlParts = String(url || "").split("#")[0].split("?");
+    if (urlParts.length < 2) return query;
+    var parts = urlParts[1].split("&");
+    for (var i = 0; i < parts.length; i++) {
+      var items = parts[i].split("=");
+      var key = items[0];
+      if (!key) continue;
+      try {
+        query[key] = decodeURIComponent(items.slice(1).join("=") || "");
+      } catch (e) {
+        query[key] = items.slice(1).join("=") || "";
+      }
+    }
+    return query;
+  }
+
+  function isStandalone() {
+    return (
+      window.navigator.standalone === true ||
+      window.matchMedia("(display-mode: standalone)").matches
+    );
+  }
+
+  function iOSMajorVersion() {
+    var m = navigator.appVersion.match(/OS (\d+)_/);
+    if (m) return parseInt(m[1], 10);
+    var v = navigator.appVersion.match(/Version\/(\d+)/);
+    if (v && /iP(hone|od|ad)/.test(navigator.userAgent)) {
+      return parseInt(v[1], 10);
+    }
+    return 0;
+  }
+
+  function buildDeepLink(cfg) {
+    cfg = cfg || {};
+    if (cfg.scheme && /:\/\//.test(cfg.scheme)) return String(cfg.scheme).trim();
+    if (cfg.deeplink) return String(cfg.deeplink).trim();
+    var host = String(cfg.schemeHost || "").trim().replace(/:\/+$/, "");
+    var path = String(cfg.path || "").replace(/^\/+/, "");
+    if (!host) throw new Error("scheme is required");
+    return path ? host + "://" + path : host + "://";
+  }
+
+  function resolveConfig(defaults) {
+    var q = getQuery(location.href);
+    var cfg = {
+      appName: q.appName || defaults.appName || "App",
+      appIcon: q.appIcon || defaults.appIcon || DEFAULT_ICON,
+      appId: q.appId || defaults.appId || "",
+      path: q.path || defaults.path || "",
+      schemeHost: q.schemeHost || defaults.schemeHost || "",
+      fallbackUrl: q.fallback || defaults.fallbackUrl || "",
+      autoJumpDelayMs: q.autoJumpDelayMs != null ? Number(q.autoJumpDelayMs) : (defaults.autoJumpDelayMs || 300),
+      fallbackDelayMs: q.fallbackDelayMs != null ? Number(q.fallbackDelayMs) : (defaults.fallbackDelayMs || 2000),
+    };
+    if (q.scheme) {
+      cfg.scheme = q.scheme;
+    } else if (defaults.scheme && /:\/\//.test(defaults.scheme)) {
+      cfg.scheme = defaults.scheme;
+    } else if (defaults.deeplink) {
+      cfg.scheme = defaults.deeplink;
+    }
+    cfg.deeplink = buildDeepLink(cfg);
+    return cfg;
+  }
+
+  var jumped = false;
+  function jumpSchema(deeplink, options) {
+    options = options || {};
+    if (jumped && !options.force) return;
+    jumped = true;
+    try { window.location.href = deeplink; } catch (e) {}
+    var fallbackUrl = options.fallbackUrl || "";
+    var delay = Number(options.fallbackDelayMs) || 2000;
+    if (!fallbackUrl) return;
+    setTimeout(function () {
+      if (document.hidden) return;
+      window.location.href = fallbackUrl;
+    }, delay);
+  }
+
+  function applyHomeScreenMeta(cfg) {
+    document.title = cfg.appName || "App";
+    var titleEl = document.getElementById("J_desktopTitle");
+    if (titleEl) titleEl.textContent = cfg.appName || "App";
+    var iconLink = document.getElementById("J_desktopIcon");
+    if (iconLink) iconLink.setAttribute("href", cfg.appIcon);
+    var appTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+    if (appTitle) appTitle.setAttribute("content", cfg.appName || "App");
+  }
+
+  var cfg = resolveConfig(WEBCLIP_CONFIG);
+  applyHomeScreenMeta(cfg);
+
+  var enterView = document.getElementById("enterView");
+  var guideView = document.getElementById("guideView");
+  var enterIcon = document.getElementById("enterIcon");
+  var enterName = document.getElementById("enterName");
+  var guideIcon = document.getElementById("guideIcon");
+  var guideName = document.getElementById("guideName");
+  var schemePreview = document.getElementById("schemePreview");
+  var stepsBox = document.getElementById("stepsBox");
+
+  enterIcon.src = cfg.appIcon;
+  enterName.textContent = cfg.appName;
+  guideIcon.src = cfg.appIcon;
+  guideName.textContent = cfg.appName;
+  schemePreview.textContent = "唤起：" + cfg.deeplink;
+
+  var major = iOSMajorVersion();
+  var stepsHtml;
+  if (major >= 18) {
+    stepsHtml =
+      '<div class="row"><label>第一步</label>：点击底部「…」按钮</div>' +
+      '<div class="row"><label>第二步</label>：在弹框内选择「共享」</div>' +
+      '<div class="row"><label>第三步</label>：继续点击「添加到主屏幕」</div>';
+  } else if (major >= 13) {
+    stepsHtml =
+      '<div class="row"><label>第一步</label>：点击底部工具栏的分享按钮 ' +
+      '<svg class="share" viewBox="0 0 24 24" fill="none" stroke="#1677ff" stroke-width="2"><path d="M12 3v12M8 7l4-4 4 4M5 14v5a2 2 0 002 2h10a2 2 0 002-2v-5"/></svg></div>' +
+      '<div class="row"><label>第二步</label>：在弹出框中点击「添加到主屏幕」</div>';
+  } else {
+    stepsHtml = '<div class="row">点击下方工具栏上的分享按钮，并选择「添加到主屏幕」</div>';
+  }
+  stepsBox.innerHTML = stepsHtml;
+
+  function doJump(force) {
+    jumpSchema(cfg.deeplink, {
+      force: !!force,
+      fallbackUrl: cfg.fallbackUrl,
+      fallbackDelayMs: cfg.fallbackDelayMs,
+    });
+  }
+
+  document.getElementById("enterBtn").addEventListener("click", function () {
+    doJump(true);
+  });
+
+  if (isStandalone()) {
+    enterView.classList.remove("hidden");
+    setTimeout(function () { doJump(false); }, Number(cfg.autoJumpDelayMs) || 0);
+  } else {
+    guideView.classList.remove("hidden");
+  }
+})();
+  </script>
+</body>
+</html>
