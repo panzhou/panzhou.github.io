@@ -240,19 +240,25 @@
   schemePreview.textContent = "唤起：" + cfg.deeplink;
 
   var major = iOSMajorVersion();
+  var tipMore =
+    '<div class="row">如果列表中没有看到「添加到主屏幕」，可以点击「查看更多」后再选择。</div>';
   var stepsHtml;
   if (major >= 18) {
     stepsHtml =
       '<div class="row"><label>第一步</label>：点击底部「…」按钮</div>' +
       '<div class="row"><label>第二步</label>：在弹框内选择「共享」</div>' +
-      '<div class="row"><label>第三步</label>：继续点击「添加到主屏幕」</div>';
+      '<div class="row"><label>第三步</label>：继续点击「添加到主屏幕」</div>' +
+      tipMore;
   } else if (major >= 13) {
     stepsHtml =
       '<div class="row"><label>第一步</label>：点击底部工具栏的分享按钮 ' +
       '<svg class="share" viewBox="0 0 24 24" fill="none" stroke="#1677ff" stroke-width="2"><path d="M12 3v12M8 7l4-4 4 4M5 14v5a2 2 0 002 2h10a2 2 0 002-2v-5"/></svg></div>' +
-      '<div class="row"><label>第二步</label>：在弹出框中点击「添加到主屏幕」</div>';
+      '<div class="row"><label>第二步</label>：在弹出框中点击「添加到主屏幕」</div>' +
+      tipMore;
   } else {
-    stepsHtml = '<div class="row">点击下方工具栏上的分享按钮，并选择「添加到主屏幕」</div>';
+    stepsHtml =
+      '<div class="row">点击下方工具栏上的分享按钮，并选择「添加到主屏幕」</div>' +
+      tipMore;
   }
   stepsBox.innerHTML = stepsHtml;
 
